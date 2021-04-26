@@ -165,6 +165,7 @@ Weblate} (@pxref{Translating Guix}).
 * Programming Interface::       Using Guix in Scheme.
 * Utilities::                   Package management commands.
 * System Configuration::        Configuring the operating system.
+* Home Configuration::          Configuring the home environment.
 * Documentation::               Browsing software user manuals.
 * Installing Debugging Files::  Feeding the debugger.
 * Security Updates::            Deploying security fixes quickly.
@@ -325,6 +326,10 @@ System Configuration
 * Invoking guix deploy::        Deploying a system configuration to a remote host.
 * Running Guix in a VM::        How to run Guix System in a virtual machine.
 * Defining Services::           Adding new service definitions.
+
+Home Environment Configuration
+
+* Invoking guix home::          Instantiating a home environment configuration.
 
 Services
 
@@ -34699,6 +34704,332 @@ system:
 This service represents PID@tie{}1.
 @end defvr
 
+@node Home Configuration
+@chapter Home Configuration
+
+@cindex home configuration
+Guix supports declarative configuration of home environments utilizing
+configuration mechanism described in previous chapter (@pxref{Defining
+Services}), but for user's home, which doesn't require Guix System and
+works on foreign distros.  It allows to declare all the software that
+has to be installed and configured for particular user, environment
+variables and other aspects.  After that, such a @dfn{home
+configuration} can be @dfn{instantiated} by unprivileged user with
+@command{guix home}.
+@c Maybe later, it will be possible to make home configuration a part of
+@c system configuration to make everything managed by guix system.
+
+@c It has the same advantages
+
+@menu
+* Declaring the Home Environment ::  Customizing your Home.
+* Configuring the Shell::     Enabling home environment.
+* Home Services::             Specifying home services.
+* Invoking guix home::        Instantiating a home configuration.
+@end menu
+
+@node Declaring the Home Environment
+@section Declaring the Home Environment
+The home environment is configured by providing @code{home-environment}
+declaration in a file that can be passed to the @command{guix home}
+command (@pxref{Invoking guix home}).  A simple setup can include bash,
+ssh and custom text configuration, like in example below.
+
+@quotation Note
+It is highly recommended to manage your shell or shells with Guix Home,
+because it will make all necessary scripts sourced by shell
+configuration files automatically.  Otherwise you will need to do it
+manually. (@pxref{Configuring the Shell}).
+@end quotation
+
+@findex home-environment
+@lisp
+@include he-config-bare-bones.texi
+@end lisp
+
+The only required field is the @code{home-directory}, which says where
+to install configurations generated from this home environment
+declaration.  The @code{packages} field should be self-describing.  The
+most important one is @code{services}, it contains list of @dfn{home
+services}, which are basic building blocks of home environment.
+
+There is no daemon (at least not necessary) related to home service,
+it's just an element used to declare part of home environment and extend
+other parts of it.  The extension mechanism discussed in previous
+chapter (@pxref{Defining Services}), not to be confused with
+(@pxref{Shepherd Services}).  Using this extension mechanism and some
+gluing scheme code gives a lot of freedom in declaring of very custom
+home environments.
+
+@node Configuring the Shell
+@section Configuring the Shell
+This section is safe to skip if your shell (or shells) is managed by
+Guix Home.  Otherwise, read it carefully.
+
+There are few scripts that must be evaluated by a login shell to
+activate home environment, the startup files read only by login shells
+often has @code{profile} prefix.  For more information about login
+shells (@pxref{Invoking Bash,,, bash, The GNU Bash Reference Manual})
+and (@pxref{Bash Startup Files,,, bash, The GNU Bash Reference Manual}).
+
+First script is @file{setup-environment}, which sets all needed
+environment variables (including variables declared by user) and the
+second one is @file{on-first-login}, which starts shepherd for current
+user and maybe perform some other actions declared in file with
+@code{home-environment} record.
+
+Guix Home always creates @file{~/.profile}, which contains following
+lines:
+
+@example
+HOME_ENVIRONMENT="/home/<USER>/.guix-home-environment"
+. $HOME_ENVIRONMENT/setup-environment
+guile $HOME_ENVIRONMENT/on-first-login
+@end example
+
+It makes POSIX compatible login shells active home environment.
+However, in most cases this file won't be read and evaluated by most
+modern shells, because they are run in non POSIX-compatible mode by
+default and have its own @file{*profile} startup files.  For example
+Bash will prefer @file{~/.bash_profile} in case it exists and only if it
+doesn't will fallback to @file{~/.profile}.  Zsh (if no additional
+options specified) will ignore @file{~/.profile} even if
+@file{~/.zprofile} doesn't exist.
+
+To make your shell respect @file{~/.profile} add @code{. ~/.profile} or
+@code{source ~/profile} to the login shell startup file.  In case of
+Bash it is @file{~/.bash_profile}, in case of Zsh it is
+@file{~/.zprofile}.
+
+@quotation Note
+This step is only required if your shell is NOT managed by Guix Home.
+Otherwise, everything will be done automatically.
+@end quotation
+
+@node Home Services
+@section Home Services
+@cindex home services
+
+Documentation for different home services will be here in the nearest
+future.
+
+@node Invoking guix home
+@section Invoking @code{guix home}
+hey, test section here
+
+Once you have written a home environment declaration as seen in the
+previous section, it can be @dfn{instantiated} using the @command{guix
+home} command.  The synopsis is:
+
+@example
+guix home @var{options}@dots{} @var{action} @var{file}
+@end example
+
+@var{file} must be the name of a file containing an
+@code{home-environment} declaration.  @var{action} specifies how the
+home environment is instantiated, but there are few auxuliary actions,
+which doesn't instantiate it.  Currently the following values are
+supported:
+
+@table @code
+@item search
+Display available home service type definitions that match the given
+regular expressions, sorted by relevance:
+
+@cindex shell
+@cindex shell-profile
+@cindex bash
+@cindex zsh
+@example
+$ guix home search shell
+name: home-shell-profile
+location: gnu/home-services/shells.scm:73:2
+extends: home-files
+description: Create `~/.profile', which is used for environment initialization
++ of POSIX compatible login shells.  Can be extended with a list of strings or
++ gexps.
+relevance: 6
+
+name: home-zsh-plugin-manager
+location: gnu/home-services/shellutils.scm:28:2
+extends: home-zsh home-profile
+description: Install plugins in profile and configure Zsh to load them.
+relevance: 1
+
+name: home-zsh-direnv
+location: gnu/home-services/shellutils.scm:69:2
+extends: home-profile home-zsh
+description: Enables `direnv' for `zsh'.  Adds hook to `.zshrc' and installs a
++ package in the profile.
+relevance: 1
+
+name: home-zsh-autosuggestions
+location: gnu/home-services/shellutils.scm:43:2
+extends: home-zsh-plugin-manager home-zsh
+description: Enables Fish-like fast/unobtrusive autosuggestions for `zsh' and
++ sets reasonable default values for some plugin's variables to improve perfomance
++ and adjust behavior: `(history completion)' is set for strategy, manual rebind
++ and async are enabled.
+relevance: 1
+
+name: home-zsh
+location: gnu/home-services/shells.scm:236:2
+extends: home-files home-profile
+description: Install and configure Zsh.
+relevance: 1
+
+name: home-bash
+location: gnu/home-services/shells.scm:388:2
+extends: home-files home-profile
+description: Install and configure Bash.
+relevance: 1
+
+@dots{}
+@end example
+
+As for @command{guix package --search}, the result is written in
+@code{recutils} format, which makes it easy to filter the output
+(@pxref{Top, GNU recutils databases,, recutils, GNU recutils manual}).
+
+@item reconfigure
+Build the home environment described in @var{file}, and switch to it.
+Switching means that symlinks to configuration files generated from
+@code{home-environment} declaration will be created in @file{~}.  If the
+file with the same path already exists in home folder it will be moved
+to @file{~/TIMESTAMP-guix-home-legacy-configs-backup}, where TIMESTAMP
+is a current UNIX epoch time.
+
+@c @footnote{This action (and the related actions
+@c @code{switch-generation} and @code{roll-back}) are usable after home
+@c environmet initialized.}.
+
+@quotation Note
+It is highly recommended to run @command{guix pull} once before you run
+@command{guix home reconfigure} for the first time (@pxref{Invoking guix
+pull}).
+@end quotation
+
+This effects all the configuration specified in @var{file}.
+The command starts shepherd services specified in @var{file} that are not
+currently running; if a service is currently running this command will
+arrange for it to be upgraded the next time it is stopped (e.g.@: by
+@code{herd stop X} or @code{herd restart X}).
+
+This command creates a new generation whose number is one greater than
+the current generation (as reported by @command{guix home
+list-generations}).  If that generation already exists, it will be
+overwritten.  This behavior mirrors that of @command{guix package}
+(@pxref{Invoking guix package}).
+
+@c Provenance is not yet implemented, by the statement still valid
+@cindex provenance tracking, of the home environment
+Upon completion, the new home is deployed under
+@file{~/.guix-home-environment} (by default).  This directory contains
+@dfn{provenance meta-data}: the list of channels in use
+(@pxref{Channels}) and @var{file} itself, when available.  You can view
+it by running:
+
+@example
+guix home describe
+@end example
+
+This information is useful should you later want to inspect how this
+particular generation was built.  In fact, assuming @var{file} is
+self-contained, you can later rebuild generation @var{n} of your
+home environment with:
+
+@example
+guix time-machine \
+  -C /var/guix/profiles/per-user/@var{USER}/guix-home-environment-@var{n}-link/channels.scm -- \
+  home reconfigure \
+  /var/guix/profiles/per-user/@var{USER}/guix-home-environment-@var{n}-link/configuration.scm
+
+@end example
+
+You can think of it as some sort of built-in version control!  Your
+home is not just a binary artifact: @emph{it carries its own source}.
+@c @xref{Service Reference, @code{provenance-service-type}}, for more
+@c information on provenance tracking.
+
+@item switch-generation
+@cindex home generations
+Switch to an existing home generation.  This action atomically switches
+the home profile to the specified home generation.
+
+The target generation can be specified explicitly by its generation
+number.  For example, the following invocation would switch to home
+generation 7:
+
+@example
+guix home switch-generation 7
+@end example
+
+The target generation can also be specified relative to the current
+generation with the form @code{+N} or @code{-N}, where @code{+3} means
+``3 generations ahead of the current generation,'' and @code{-1} means
+``1 generation prior to the current generation.''  When specifying a
+negative value such as @code{-1}, you must precede it with @code{--} to
+prevent it from being parsed as an option.  For example:
+
+@example
+guix home switch-generation -- -1
+@end example
+
+This action will fail if the specified generation does not exist.
+
+@item roll-back
+@cindex rolling back
+Switch to the preceding home generation.  This is the inverse
+of @command{reconfigure}, and it is exactly the same as invoking
+@command{switch-generation} with an argument of @code{-1}.
+
+@item delete-generations
+@cindex deleting home generations
+@cindex saving space
+Delete home generations, making them candidates for garbage collection
+(@pxref{Invoking guix gc}, for information on how to run the ``garbage
+collector'').
+
+This works in the same way as @samp{guix package --delete-generations}
+(@pxref{Invoking guix package, @option{--delete-generations}}).  With no
+arguments, all home generations but the current one are deleted:
+
+@example
+guix home delete-generations
+@end example
+
+You can also select the generations you want to delete.  The example below
+deletes all the home generations that are more than two month old:
+
+@example
+guix home delete-generations 2m
+@end example
+
+@item build
+Build the derivation of the home environment, which includes all the
+configuration files and programs needed.  This action does not actually
+install anything.
+
+@item describe
+Describe the current home generation: its file name, as well as
+provenance information when available.
+
+@item list-generations
+List a summary of each generation of the home environment available on
+disk, in a human-readable way.  This is similar to the
+@option{--list-generations} option of @command{guix package}
+(@pxref{Invoking guix package}).
+
+Optionally, one can specify a pattern, with the same syntax that is used
+in @command{guix package --list-generations}, to restrict the list of
+generations displayed.  For instance, the following command displays
+generations that are up to 10 days old:
+
+@example
+$ guix home list-generations 10d
+@end example
+
+@end table
 
 @node Documentation
 @chapter Documentation

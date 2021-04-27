@@ -34763,7 +34763,7 @@ home environments.
 
 @node Configuring the Shell
 @section Configuring the Shell
-This section is safe to skip if your shell (or shells) is managed by
+This section is safe to skip if your shell or shells are managed by
 Guix Home.  Otherwise, read it carefully.
 
 There are few scripts that must be evaluated by a login shell to
@@ -34787,7 +34787,7 @@ HOME_ENVIRONMENT="/home/<USER>/.guix-home-environment"
 guile $HOME_ENVIRONMENT/on-first-login
 @end example
 
-It makes POSIX compatible login shells active home environment.
+It makes POSIX compatible login shells activate home environment.
 However, in most cases this file won't be read and evaluated by most
 modern shells, because they are run in non POSIX-compatible mode by
 default and have its own @file{*profile} startup files.  For example
@@ -34810,12 +34810,82 @@ Otherwise, everything will be done automatically.
 @section Home Services
 @cindex home services
 
-Documentation for different home services will be here in the nearest
-future.
+@dfn{Home service} is not necessary something that have daemon and
+managed by Shepherd (@pxref{Jump Start,,, shepherd, The GNU Shepherd
+Manual}), in most cases it doesn't.  It's a simple building block of
+home environment, often declaring a set of packages to be installed in
+home environment profile, a set of config files to be symlinked into
+@env{XDG_CONFIG_HOME} (default value is @file{~/.config}) and
+environment variables to be set by a login shell.
+
+These use cases are often, but not the only possible, there is a service
+extension mechanism (@pxref{Service Composition}), which allows to
+extend other home services and utilize capabilities they provide, for
+example: declare mcron jobs (@pxref{Top,,, mcron, GNU@tie{}Mcron}) by
+extending @ref{Mcron Home Service}, declare daemons by extending
+@ref{Shepherd Home Service}, add commands, which will be invoked on each
+shell spawn by extending @xref{Shells Home Services, Bash Home Service},
+and many more.
+
+The best way to discover avaliable home services is using @command{guix
+home search} (@pxref{Invoking guix home}).  After the required home
+service found, include its module with @code{use-modules} function or
+@code{#:use-modules} directive and add declare a home service using
+@code{service} function or extend service type by declaring a new
+service with @code{simple-service} function from @code{(gnu services)}
+or any other way.
+
+@menu
+* Essential Home Services::  Environment variables, packages, on-* scripts.
+* Shells: Shells Home Services.          POSIX shells, Bash, Zsh.
+* Mcron: Mcron Home Service.             Scheduled User's Job Execution.
+* Shepherd: Shepherd Home Service.       Managing User's Daemons.
+@end menu
+@c In addition to that Home Services can provide 
+
+@node Essential Home Services
+@subsection Essential Home Services
+
+@subsubheading Environment Vars Home Service
+@cindex environment variables
+
+
+@node Shells Home Services
+@subsection Shells
+
+@cindex shell
+@cindex login shell
+@cindex interactive shell
+@cindex bash
+@cindex zsh
+
+@subsubheading Shell Profile Service
+
+~/.profile
+
+@subsubheading Bash Home Service
+
+bash service type info here
+
+@subsubheading Zsh Home Service
+
+zsh service type info here
+
+@node Mcron Home Service
+@subsection Scheduled User's Job Execution
+
+@cindex cron
+@cindex mcron
+@cindex scheduling jobs
+
+mcron info here
+
+@node Shepherd Home Service
+@subsection Managing User's Daemons
+shepherd info here
 
 @node Invoking guix home
 @section Invoking @code{guix home}
-hey, test section here
 
 Once you have written a home environment declaration as seen in the
 previous section, it can be @dfn{instantiated} using the @command{guix

@@ -34845,10 +34845,97 @@ or any other way.
 
 @node Essential Home Services
 @subsection Essential Home Services
+There are a few essential services defined in @code{(gnu
+home-services)}, they are kinda internal and required to build a home
+environment, but some of them will be useful for end user.
 
-@subsubheading Environment Vars Home Service
 @cindex environment variables
 
+@defvr {Scheme Variable} home-environment-variables-service-type
+The service of this type will be instantiated by every home environment
+automatically, there is no need to define it, but someone may want to
+extend it with a list of pairs to set some environment variables.
+
+@lisp
+(list ("ENV_VAR1" . "value1")
+      ("ENV_VAR2" . "value2"))
+@end lisp
+
+The easiest way to extend service type, without defining new service
+type is to use @code{simple-service} helper from @code{(gnu services)}.
+
+@lisp
+(simple-service 'some-useful-env-vars-service
+		home-environment-variables-service-type
+		'(("LESSHISTFILE" . "$XDG_CACHE_HOME/.lesshst")
+                  ("SHELL" . ,(file-append zsh "/bin/zsh"))
+                  ("USELESS_VAR" . #f)
+                  ("_JAVA_AWT_WM_NONREPARENTING" . #t)))
+@end lisp
+
+If you include such service to you home environment definition, it will
+add the following content to @file{setup-environment} script (which
+expected to be sourced by login shell):
+
+@example
+export LESSHISTFILE=$XDG_CACHE_HOME/.lesshst
+export SHELL=/gnu/store/2hsg15n644f0glrcbkb1kqknmmqdar03-zsh-5.8/bin/zsh
+export _JAVA_AWT_WM_NONREPARENTING
+@end example
+
+Key is always a string, value can be string, string-valued gexp,
+file-like object or boolean. For gexps the variable will be set to the
+value of the gexp. For file-like objects to the path of the file in the
+store. For #t it will export the variable without any value. For #f it
+will omit variable.
+
+@end defvr
+
+@defvr {Scheme Variable} home-profile-service-type
+The service of this type will be instantiated by every home environment
+automatically, there is no need to define it, but someone may want to
+extend it with a list of packages to install in home environment's
+profile.  Other services, which need to make some applications avaliable
+to the user also extends this service type.
+
+The extension value is just a list of packages:
+
+@lisp
+(list htop vim emacs)
+@end lisp
+
+The same approach as for @code{home-environment-variables-service-type}
+with @code{simple-service} can be used here too. Make sure that modules
+containing specified packages are imported with @code{use-modules}.  To
+find a package or information about its module use @command{guix search}
+(@pxref{Invoking guix package}).
+@end defvr
+
+There are few more essential services, but users are not expected to
+extend them.
+
+@defvr {Scheme Variable} home-service-type
+The root of home services DAG, generates a folder, which later will be
+symlinked to @file{~/.guix-home-environment}, containing configurations,
+profile with binaries and libraries, necessary scripts and other things,
+@end defvr
+
+@defvr {Scheme Variable} home-run-on-first-login-service-type
+The service of this type generates a guile script, which expected to be
+executed by login shell, after execution a temporary file in
+@env{XDG_RUNTIME_DIR} is created, it prevents the execution of the
+script twice during one session if few login shells are spawned.
+
+Can be extended with gexp.  For autostart of an application user have to
+prefer extend @code{home-shepherd-service-type} with a shepherd service,
+@code{home-bash-service-type}'s startup file or any other service type,
+which suits.
+@end defvr
+
+@defvr {Scheme Variable} home-run-on-reconfigure-service-type
+The service of this type generates a guile script, which runs on every
+@command{guix home reconfigure} invocation.
+@end defvr
 
 @node Shells Home Services
 @subsection Shells

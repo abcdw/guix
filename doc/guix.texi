@@ -94,6 +94,7 @@ Copyright @copyright{} 2021 Xinglu Chen@*
 Copyright @copyright{} 2021 Raghav Gururajan@*
 Copyright @copyright{} 2021 Domagoj Stolfa@*
 Copyright @copyright{} 2021 Hui Lu@*
+Copyright @copyright{} 2021 Andrew Tropin@*
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
@@ -34708,14 +34709,13 @@ This service represents PID@tie{}1.
 @chapter Home Configuration
 
 @cindex home configuration
-Guix supports declarative configuration of home environments utilizing
-configuration mechanism described in previous chapter (@pxref{Defining
-Services}), but for user's home, which doesn't require Guix System and
-works on foreign distros.  It allows to declare all the software that
-has to be installed and configured for particular user, environment
-variables and other aspects.  After that, such a @dfn{home
-configuration} can be @dfn{instantiated} by unprivileged user with
-@command{guix home}.
+Guix supports declarative configuration of home environments by
+utilizing the configuration mechanism described in the previous chapter
+(@pxref{Defining Services}), but for user's home, which works on Guix
+System and foreign distros.  It allows users to declare all the packages
+that should be installed and configured for the user.  After that, such
+a @dfn{home configuration} can be @dfn{instantiated} by an unprivileged
+user with the @command{guix home} command (@pxref{Invoking guix home}).
 @c Maybe later, it will be possible to make home configuration a part of
 @c system configuration to make everything managed by guix system.
 
@@ -34732,13 +34732,13 @@ configuration} can be @dfn{instantiated} by unprivileged user with
 @section Declaring the Home Environment
 The home environment is configured by providing @code{home-environment}
 declaration in a file that can be passed to the @command{guix home}
-command (@pxref{Invoking guix home}).  A simple setup can include bash,
-ssh and custom text configuration, like in example below.
+command (@pxref{Invoking guix home}).  A simple setup can include Bash,
+SSH and custom text configuration, like in the example below.
 
 @quotation Note
-It is highly recommended to manage your shell or shells with Guix Home,
-because it will make all necessary scripts sourced by shell
-configuration files automatically.  Otherwise you will need to do it
+It is highly recommended that you manage your shell or shells with Guix
+Home, because it will make sure that all the necessary scripts are
+sourced by shell configuration file.  Otherwise you will need to do it
 manually. (@pxref{Configuring the Shell}).
 @end quotation
 
@@ -34747,19 +34747,20 @@ manually. (@pxref{Configuring the Shell}).
 @include he-config-bare-bones.texi
 @end lisp
 
-The only required field is the @code{home-directory}, which says where
-to install configurations generated from this home environment
-declaration.  The @code{packages} field should be self-describing.  The
-most important one is @code{services}, it contains list of @dfn{home
-services}, which are basic building blocks of home environment.
+The only required field is @code{home-directory}, which says where the
+profile for this home environment should be placed.  The @code{packages}
+field should be self-explanatory, it will install the list of packages
+into the user's profile.  The most important field is @code{services},
+it contains a list of @dfn{home services}, which are the basic building
+blocks of a home environment.
 
 There is no daemon (at least not necessary) related to home service,
-it's just an element used to declare part of home environment and extend
-other parts of it.  The extension mechanism discussed in previous
-chapter (@pxref{Defining Services}), not to be confused with
-(@pxref{Shepherd Services}).  Using this extension mechanism and some
-gluing scheme code gives a lot of freedom in declaring of very custom
-home environments.
+it's just an element that is used to declare part of home environment
+and extend other parts of it.  The extension mechanism discussed in the
+previous chapter (@pxref{Defining Services}) should not to be confused
+with Shepherd services (@pxref{Shepherd Services}).  Using this
+extension mechanism and some Scheme code that glues things together
+gives a lot of freedom in declaring of very custom home environments.
 
 @node Configuring the Shell
 @section Configuring the Shell
@@ -34767,38 +34768,38 @@ This section is safe to skip if your shell or shells are managed by
 Guix Home.  Otherwise, read it carefully.
 
 There are few scripts that must be evaluated by a login shell to
-activate home environment, the startup files read only by login shells
-often has @code{profile} prefix.  For more information about login
-shells (@pxref{Invoking Bash,,, bash, The GNU Bash Reference Manual})
-and (@pxref{Bash Startup Files,,, bash, The GNU Bash Reference Manual}).
+activate the home environment, the startup files only read by login
+shells often have @code{profile} suffix.  For more information about
+login shells see @ref{Invoking Bash,,, bash, The GNU Bash Reference
+Manual} and see @ref{Bash Startup Files,,, bash, The GNU Bash Reference
+Manual}.
 
-First script is @file{setup-environment}, which sets all needed
-environment variables (including variables declared by user) and the
-second one is @file{on-first-login}, which starts shepherd for current
-user and maybe perform some other actions declared in file with
-@code{home-environment} record.
+The first script is @file{setup-environment}, which sets all the
+necessary environment variables (including variables declared by user)
+and the second one is @file{on-first-login}, which starts Shepherd for
+the current user and performs some other actions declared in the file
+with @code{home-environment} record.
 
-Guix Home always creates @file{~/.profile}, which contains following
-lines:
+Guix Home will always create @file{~/.profile}, which contains the
+following lines:
 
 @example
-HOME_ENVIRONMENT="/home/<USER>/.guix-home-environment"
+HOME_ENVIRONMENT="/home/USER/.guix-home-environment"
 . $HOME_ENVIRONMENT/setup-environment
 guile $HOME_ENVIRONMENT/on-first-login
 @end example
 
-It makes POSIX compatible login shells activate home environment.
-However, in most cases this file won't be read and evaluated by most
-modern shells, because they are run in non POSIX-compatible mode by
-default and have its own @file{*profile} startup files.  For example
-Bash will prefer @file{~/.bash_profile} in case it exists and only if it
-doesn't will fallback to @file{~/.profile}.  Zsh (if no additional
-options specified) will ignore @file{~/.profile} even if
-@file{~/.zprofile} doesn't exist.
+That makes POSIX compliant login shells activate the home environment.
+However, in most cases this file won't be read by most modern shells,
+because they are run in non POSIX mode by default and have their own
+@file{*profile} startup files.  For example Bash will prefer
+@file{~/.bash_profile} in case it exists and only if it doesn't will it
+fallback to @file{~/.profile}.  Zsh (if no additional options specified)
+will ignore @file{~/.profile}, even if @file{~/.zprofile} doesn't exist.
 
-To make your shell respect @file{~/.profile} add @code{. ~/.profile} or
-@code{source ~/profile} to the login shell startup file.  In case of
-Bash it is @file{~/.bash_profile}, in case of Zsh it is
+To make your shell respect @file{~/.profile}, add @code{. ~/.profile} or
+@code{source ~/profile} to the startup file for the login shell.  In
+case of Bash, it is @file{~/.bash_profile}, and in case of Zsh, it is
 @file{~/.zprofile}.
 
 @quotation Note
@@ -34810,30 +34811,32 @@ Otherwise, everything will be done automatically.
 @section Home Services
 @cindex home services
 
-@dfn{Home service} is not necessary something that have daemon and
-managed by Shepherd (@pxref{Jump Start,,, shepherd, The GNU Shepherd
+A @dfn{home service} is not necessarily something that has a daemon and
+is managed by Shepherd (@pxref{Jump Start,,, shepherd, The GNU Shepherd
 Manual}), in most cases it doesn't.  It's a simple building block of
 home environment, often declaring a set of packages to be installed in
-home environment profile, a set of config files to be symlinked into
+the home environment profile, a set of config files to be symlinked into
 @env{XDG_CONFIG_HOME} (default value is @file{~/.config}) and
 environment variables to be set by a login shell.
 
-These use cases are often, but not the only possible, there is a service
-extension mechanism (@pxref{Service Composition}), which allows to
-extend other home services and utilize capabilities they provide, for
-example: declare mcron jobs (@pxref{Top,,, mcron, GNU@tie{}Mcron}) by
-extending @ref{Mcron Home Service}, declare daemons by extending
-@ref{Shepherd Home Service}, add commands, which will be invoked on each
-shell spawn by extending @xref{Shells Home Services, Bash Home Service},
-and many more.
+There is a service extension mechanism (@pxref{Service Composition}),
+which allows home services to extend other home services and utilize
+capabilities they provide, for example: declare mcron jobs
+(@pxref{Top,,, mcron, GNU@tie{}Mcron}) by extending @ref{Mcron Home
+Service}, declare daemons by extending @ref{Shepherd Home Service}, add
+commands, which will be invoked on by the Bash by extending
+@ref{Shells Home Services, @code{home-bash-service-type}}.
 
-The best way to discover avaliable home services is using @command{guix
-home search} (@pxref{Invoking guix home}).  After the required home
-service found, include its module with @code{use-modules} function or
-@code{#:use-modules} directive and add declare a home service using
-@code{service} function or extend service type by declaring a new
-service with @code{simple-service} function from @code{(gnu services)}
-or any other way.
+The best way to discover avaliable home services is using the
+@command{guix home search} command (@pxref{Invoking guix home}).  After
+the required home services are found, include its module with the
+@code{use-modules} form (@pxref{use-modules,, Using Guile Modules,
+guile, The GNU Guile Reference Manual}), or the @code{#:use-modules}
+directive (@pxref{define-module,, Creating Guile Modules, guile, The GNU
+Guile Reference Manual}) and declare a home service using the
+@code{service} function, or extend a service type by declaring a new
+service with the @code{simple-service} procedure from @code{(gnu
+services)}.
 
 @menu
 * Essential Home Services::  Environment variables, packages, on-* scripts.
@@ -34846,8 +34849,9 @@ or any other way.
 @node Essential Home Services
 @subsection Essential Home Services
 There are a few essential services defined in @code{(gnu
-home-services)}, they are kinda internal and required to build a home
-environment, but some of them will be useful for end user.
+home-services)}, they are mostly for internal use and are required to
+build a home environment, but some of them will be useful for the end
+user.
 
 @cindex environment variables
 
@@ -34862,7 +34866,8 @@ extend it with a list of pairs to set some environment variables.
 @end lisp
 
 The easiest way to extend service type, without defining new service
-type is to use @code{simple-service} helper from @code{(gnu services)}.
+type is to use the @code{simple-service} helper from @code{(gnu
+services)}.
 
 @lisp
 (simple-service 'some-useful-env-vars-service
@@ -34874,8 +34879,8 @@ type is to use @code{simple-service} helper from @code{(gnu services)}.
 @end lisp
 
 If you include such service to you home environment definition, it will
-add the following content to @file{setup-environment} script (which
-expected to be sourced by login shell):
+add the following content to the @file{setup-environment} script (which
+is expected to be sourced by the login shell):
 
 @example
 export LESSHISTFILE=$XDG_CACHE_HOME/.lesshst
@@ -34883,20 +34888,24 @@ export SHELL=/gnu/store/2hsg15n644f0glrcbkb1kqknmmqdar03-zsh-5.8/bin/zsh
 export _JAVA_AWT_WM_NONREPARENTING
 @end example
 
-Key is always a string, value can be string, string-valued gexp,
-file-like object or boolean. For gexps the variable will be set to the
-value of the gexp. For file-like objects to the path of the file in the
-store. For #t it will export the variable without any value. For #f it
-will omit variable.
+The key of the association list (@pxref{Association Lists, alists,
+Association Lists, guile, The GNU Guile Reference manual}) is always a
+string, the value can be a string, string-valued gexp
+(@pxref{G-Expressions}) file-like object (@pxref{G-Expressions,
+file-like-object}) or boolean. For gexps, the variable will be set to
+the value of the gexp; for file-like objects, it will be set to the path
+of the file in the store (@pxref{The Store}); for @code{#t}, it will
+export the variable without any value; and for @code{#f}, it will omit
+variable.
 
 @end defvr
 
 @defvr {Scheme Variable} home-profile-service-type
 The service of this type will be instantiated by every home environment
-automatically, there is no need to define it, but someone may want to
-extend it with a list of packages to install in home environment's
-profile.  Other services, which need to make some applications avaliable
-to the user also extends this service type.
+automatically, there is no need to define it, but you may want to extend
+it with a list of packages if you want to install additional packages
+into your profile.  Other services, which need to make some programs
+avaliable to the user will also extend this service type.
 
 The extension value is just a list of packages:
 
@@ -34904,34 +34913,37 @@ The extension value is just a list of packages:
 (list htop vim emacs)
 @end lisp
 
-The same approach as for @code{home-environment-variables-service-type}
-with @code{simple-service} can be used here too. Make sure that modules
-containing specified packages are imported with @code{use-modules}.  To
-find a package or information about its module use @command{guix search}
-(@pxref{Invoking guix package}).
+The same approach as @code{simple-service} (@pxref{Service Reference,
+simple-service}) for @code{home-environment-variables-service-type} can
+be used here, too.  Make sure that modules containing the specified
+packages are imported with @code{use-modules}.  To find a package or
+information about its module use @command{guix search} (@pxref{Invoking
+guix package}).
 @end defvr
 
 There are few more essential services, but users are not expected to
 extend them.
 
 @defvr {Scheme Variable} home-service-type
-The root of home services DAG, generates a folder, which later will be
-symlinked to @file{~/.guix-home-environment}, containing configurations,
-profile with binaries and libraries, necessary scripts and other things,
+The root of home services DAG, it generates a folder, which later will be
+symlinked to @file{~/.guix-home-environment}, it contains configurations,
+profile with binaries and libraries, and some necessary scripts to glue
+things together.
 @end defvr
 
 @defvr {Scheme Variable} home-run-on-first-login-service-type
-The service of this type generates a guile script, which expected to be
-executed by login shell, after execution a temporary file in
-@env{XDG_RUNTIME_DIR} is created, it prevents the execution of the
-script twice during one session if few login shells are spawned.
+The service of this type generates a Guile script, which is expected to
+be executed by the login shell.  It is only executed if the file set by
+@env{XDG_RUNTIME_DIR} hasn't been created, this prevents redundant executions
+of the script if multiple login shells are spawned.
 
-Can be extended with gexp.  For autostart of an application user have to
-prefer extend @code{home-shepherd-service-type} with a shepherd service,
-@code{home-bash-service-type}'s startup file or any other service type,
-which suits.
+It Can be extended with a gexp.  To autostart an application, users
+should extend @code{home-shpeherd-service-type} with a Shepherd service
+(@pxref{Shepherd Services}), or extend the shell's startup file using
+the appropriate service type.
 @end defvr
 
+@c TODO: Rename to activation-service-type?
 @defvr {Scheme Variable} home-run-on-reconfigure-service-type
 The service of this type generates a guile script, which runs on every
 @command{guix home reconfigure} invocation.
@@ -34946,19 +34958,19 @@ The service of this type generates a guile script, which runs on every
 @cindex bash
 @cindex zsh
 
-Shells plays quite important role in environment initialization process,
-you can configure them manually as described in section
-@ref{Configuring the Shell}, but recommended way is to use home
-services listed below.  It's both easier and more reliable.
+Shells play a quite important role in the environment initialization
+process, you can configure them manually as described in section
+@ref{Configuring the Shell}, but the recommended way is to use home services
+listed below.  It's both easier and more reliable.
 
 Each home environment instantiates
-@code{home-shell-profile-service-type}, which creates @file{~/.profile}
-startup file for all POSIX-compatible shells, which contains all
-necessary steps to properly initialize environment, but many modern
-shells like Bash or Zsh prefer their own startup files, that's why
-respective home service @code{home-bash-service-type} and
-@code{home-zsh-service-type} ensures that @file{~/.profile} is sourced
-by @file{~/.bash_profile} or @file{~/.zprofile}.
+@code{home-shell-profile-service-type}, which creates a @file{~/.profile}
+startup file for all POSIX-compatible shells.  This filecontains all the
+necessary steps to properly initialize the environment, but many modern
+shells like Bash or Zsh prefer their own startup files, that's why the
+respective home services (@code{home-bash-service-type} and
+@code{home-zsh-service-type}) ensure that @file{~/.profile} is sourced
+by @file{~/.bash_profile} and @file{~/.zprofile}, respectively.
 
 @subsubheading Shell Profile Service
 
@@ -35123,18 +35135,18 @@ shepherd info here
 @node Invoking guix home
 @section Invoking @code{guix home}
 
-Once you have written a home environment declaration as seen in the
-previous section, it can be @dfn{instantiated} using the @command{guix
-home} command.  The synopsis is:
+Once you have written a home environment declaration (@pxref{Declaring
+the Home Environment,,,,}, it can be @dfn{instantiated} using the
+@command{guix home} command.  The synopsis is:
 
 @example
 guix home @var{options}@dots{} @var{action} @var{file}
 @end example
 
-@var{file} must be the name of a file containing an
+@var{file} must be the name of a file containing a
 @code{home-environment} declaration.  @var{action} specifies how the
 home environment is instantiated, but there are few auxuliary actions,
-which doesn't instantiate it.  Currently the following values are
+which don't instantiate it.  Currently the following values are
 supported:
 
 @table @code
@@ -35192,10 +35204,6 @@ relevance: 1
 
 @dots{}
 @end example
-
-As for @command{guix package --search}, the result is written in
-@code{recutils} format, which makes it easy to filter the output
-(@pxref{Top, GNU recutils databases,, recutils, GNU recutils manual}).
 
 @item reconfigure
 Build the home environment described in @var{file}, and switch to it.

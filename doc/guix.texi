@@ -34757,10 +34757,10 @@ blocks of a home environment.
 There is no daemon (at least not necessary) related to home service,
 it's just an element that is used to declare part of home environment
 and extend other parts of it.  The extension mechanism discussed in the
-previous chapter (@pxref{Defining Services}) should not to be confused
-with Shepherd services (@pxref{Shepherd Services}).  Using this
-extension mechanism and some Scheme code that glues things together
-gives a lot of freedom in declaring of very custom home environments.
+previous chapter (@pxref{Defining Services}) should not be confused with
+@ref{Shepherd Services}.  Using this extension mechanism and some Scheme
+code that glues things together gives a lot of freedom in declaring of
+very custom home environments.
 
 @node Configuring the Shell
 @section Configuring the Shell
@@ -34892,7 +34892,7 @@ The key of the association list (@pxref{Association Lists, alists,
 Association Lists, guile, The GNU Guile Reference manual}) is always a
 string, the value can be a string, string-valued gexp
 (@pxref{G-Expressions}) file-like object (@pxref{G-Expressions,
-file-like-object}) or boolean. For gexps, the variable will be set to
+file-like object}) or boolean. For gexps, the variable will be set to
 the value of the gexp; for file-like objects, it will be set to the path
 of the file in the store (@pxref{The Store}); for @code{#t}, it will
 export the variable without any value; and for @code{#f}, it will omit
@@ -34933,9 +34933,9 @@ things together.
 
 @defvr {Scheme Variable} home-run-on-first-login-service-type
 The service of this type generates a Guile script, which is expected to
-be executed by the login shell.  It is only executed if the file set by
-@env{XDG_RUNTIME_DIR} hasn't been created, this prevents redundant executions
-of the script if multiple login shells are spawned.
+be executed by the login shell.  It is only executed if the special flag
+file inside @env{XDG_RUNTIME_DIR} hasn't been created, this prevents
+redundant executions of the script if multiple login shells are spawned.
 
 It Can be extended with a gexp.  To autostart an application, users
 should extend @code{home-shpeherd-service-type} with a Shepherd service
@@ -34964,13 +34964,14 @@ process, you can configure them manually as described in section
 listed below.  It's both easier and more reliable.
 
 Each home environment instantiates
-@code{home-shell-profile-service-type}, which creates a @file{~/.profile}
-startup file for all POSIX-compatible shells.  This filecontains all the
-necessary steps to properly initialize the environment, but many modern
-shells like Bash or Zsh prefer their own startup files, that's why the
-respective home services (@code{home-bash-service-type} and
-@code{home-zsh-service-type}) ensure that @file{~/.profile} is sourced
-by @file{~/.bash_profile} and @file{~/.zprofile}, respectively.
+@code{home-shell-profile-service-type}, which creates a
+@file{~/.profile} startup file for all POSIX-compatible shells.  This
+file contains all the necessary steps to properly initialize the
+environment, but many modern shells like Bash or Zsh prefer their own
+startup files, that's why the respective home services
+(@code{home-bash-service-type} and @code{home-zsh-service-type}) ensure
+that @file{~/.profile} is sourced by @file{~/.bash_profile} and
+@file{~/.zprofile}, respectively.
 
 @subsubheading Shell Profile Service
 
@@ -35204,6 +35205,10 @@ relevance: 1
 
 @dots{}
 @end example
+
+As for @command{guix package --search}, the result is written in
+@code{recutils} format, which makes it easy to filter the output
+(@pxref{Top, GNU recutils databases,, recutils, GNU recutils manual}).
 
 @item reconfigure
 Build the home environment described in @var{file}, and switch to it.

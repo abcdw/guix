@@ -34707,22 +34707,44 @@ This service represents PID@tie{}1.
 
 @node Home Configuration
 @chapter Home Configuration
-
 @cindex home configuration
-Guix supports declarative configuration of home environments by
+Guix supports declarative configuration of @dfn{home environment} by
 utilizing the configuration mechanism described in the previous chapter
-(@pxref{Defining Services}), but for user's home, which works on Guix
-System and foreign distros.  It allows users to declare all the packages
+(@pxref{Defining Services}), but for user's home. It works both on Guix
+System and foreign distros and allows users to declare all the packages
 that should be installed and configured for the user.  After that, such
 a @dfn{home configuration} can be @dfn{instantiated} by an unprivileged
 user with the @command{guix home} command (@pxref{Invoking guix home}).
 @c Maybe later, it will be possible to make home configuration a part of
 @c system configuration to make everything managed by guix system.
 
-@c It has the same advantages
+User's home environment usually consists of three basic parts: software,
+configuration and state.  Software in mainstream distos usually
+installed system-wide, but with GNU Guix most of software packages can
+be installed specifically for user by user themself and thus considered
+as a part of home environemnt.  Packages on their own not very useful in
+many cases, because they require some additional configuration, often
+it's config files residing in @env{XDG_CONFIG_HOME} (usually
+@file{~/.config}) or other directories.  Everything else can be considered
+as a state: media files, application databases, logs, and so on.
+
+Using Guix for managing home environments provides a number of
+advantages: All software can be configured in one language (Guile), it
+implies code reuse, possibility to share values between configurations
+of different programs and other benifits; Well-defined home environment
+is self-contained and will be in a working condition after instantiation
+without any additional steps like installing external binaries or
+copying or editing any configuration files; After every @command{guix
+home reconfigure} call on correct configuration, new generation of home
+environment created, that means if something is not working or working
+in undesired way it's really easy to rollback to previous generation of
+home environment and get complete working environment.
+
+@c It's possible to manage (init, sync, etc) state with Guix Home, but be
+@c aware, it is an experimental feature.
 
 @menu
-* Declaring the Home Environment ::  Customizing your Home.
+* Declaring the Home Environment::  Customizing your Home.
 * Configuring the Shell::     Enabling home environment.
 * Home Services::             Specifying home services.
 * Invoking guix home::        Instantiating a home configuration.
@@ -34943,10 +34965,10 @@ should extend @code{home-shpeherd-service-type} with a Shepherd service
 the appropriate service type.
 @end defvr
 
-@c TODO: Rename to activation-service-type?
-@defvr {Scheme Variable} home-run-on-reconfigure-service-type
+@defvr {Scheme Variable} home-activation-service-type
 The service of this type generates a guile script, which runs on every
-@command{guix home reconfigure} invocation.
+@command{guix home reconfigure} invocation or any other action, which
+leads to generation switching.
 @end defvr
 
 @node Shells Home Services

@@ -34719,26 +34719,41 @@ user with the @command{guix home} command (@pxref{Invoking guix home}).
 @c system configuration to make everything managed by guix system.
 
 User's home environment usually consists of three basic parts: software,
-configuration and state.  Software in mainstream distos usually
-installed system-wide, but with GNU Guix most of software packages can
-be installed specifically for user by user themself and thus considered
-as a part of home environemnt.  Packages on their own not very useful in
-many cases, because they require some additional configuration, often
-it's config files residing in @env{XDG_CONFIG_HOME} (usually
-@file{~/.config}) or other directories.  Everything else can be considered
-as a state: media files, application databases, logs, and so on.
+configuration and state.  Software in mainstream distros are usually
+installed system-wide, but with GNU Guix most software packages can be
+installed on a per-user basis without needing root privileges, and are
+thus considered part of the user’s @dfn{home environment}.  Packages on
+their own not very useful in many cases, because often they require some
+additional configuration, usually config files that reside in
+@env{XDG_CONFIG_HOME} (default value is @file{~/.config}) or other
+directories.  Everything else can be considered state, like media files,
+application databases, and logs.
 
 Using Guix for managing home environments provides a number of
-advantages: All software can be configured in one language (Guile), it
-implies code reuse, possibility to share values between configurations
-of different programs and other benifits; Well-defined home environment
-is self-contained and will be in a working condition after instantiation
-without any additional steps like installing external binaries or
-copying or editing any configuration files; After every @command{guix
-home reconfigure} call on correct configuration, new generation of home
-environment created, that means if something is not working or working
-in undesired way it's really easy to rollback to previous generation of
-home environment and get complete working environment.
+advantages:
+
+@itemize
+
+@item All software can be configured in one language (Guile Scheme),
+this gives users to ability to share values between configurations of
+different programs and other benifits.
+
+@item A well-defined home environment is self-contained and can be
+created in a a declarative and reproducible way.  There is no need to
+grab external binaries or manually edit some configuration file.
+
+@item After every @command{guix home reconfigure} invocation, a new home
+environment generation will be created.  This means that users can
+rollback to a previous home environment generation so they don’t have to
+worry about breaking their configuration.
+
+@item It is possible to manage stateful data with Guix Home, this
+includes the ability to automatically clone Git repositories on the
+initial setup of the machine, and periodically running commands like
+@command{rsync} to sync data with another host.  This functionality is
+still in an experimental stage, though.
+
+@end itemize
 
 @c It's possible to manage (init, sync, etc) state with Guix Home, but be
 @c aware, it is an experimental feature.

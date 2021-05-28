@@ -34821,7 +34821,7 @@ Guix Home will always create @file{~/.profile}, which contains the
 following lines:
 
 @example
-HOME_ENVIRONMENT="/home/USER/.guix-home-environment"
+HOME_ENVIRONMENT="/home/USER/.guix-home"
 . $HOME_ENVIRONMENT/setup-environment
 guile $HOME_ENVIRONMENT/on-first-login
 @end example
@@ -34963,7 +34963,7 @@ extend them.
 
 @defvr {Scheme Variable} home-service-type
 The root of home services DAG, it generates a folder, which later will be
-symlinked to @file{~/.guix-home-environment}, it contains configurations,
+symlinked to @file{~/.guix-home}, it contains configurations,
 profile with binaries and libraries, and some necessary scripts to glue
 things together.
 @end defvr
@@ -35019,7 +35019,7 @@ Path to home-environment symlink, which contains files that have to be
 sourced or executed by login shell.  This path will be set automatically
 by home-environment.
 
-Defaults to @samp{"~/.guix-home-environment"}.
+Defaults to @samp{"~/.guix-home"}.
 
 @end deftypevr
 
@@ -35280,7 +35280,7 @@ overwritten.  This behavior mirrors that of @command{guix package}
 @c Provenance is not yet implemented, by the statement still valid
 @cindex provenance tracking, of the home environment
 Upon completion, the new home is deployed under
-@file{~/.guix-home-environment} (by default).  This directory contains
+@file{~/.guix-home} (by default).  This directory contains
 @dfn{provenance meta-data}: the list of channels in use
 (@pxref{Channels}) and @var{file} itself, when available.  You can view
 it by running:
@@ -35296,9 +35296,9 @@ home environment with:
 
 @example
 guix time-machine \
-  -C /var/guix/profiles/per-user/@var{USER}/guix-home-environment-@var{n}-link/channels.scm -- \
+  -C /var/guix/profiles/per-user/@var{USER}/guix-home-@var{n}-link/channels.scm -- \
   home reconfigure \
-  /var/guix/profiles/per-user/@var{USER}/guix-home-environment-@var{n}-link/configuration.scm
+  /var/guix/profiles/per-user/@var{USER}/guix-home-@var{n}-link/configuration.scm
 
 @end example
 

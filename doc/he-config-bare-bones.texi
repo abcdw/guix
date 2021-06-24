@@ -9,8 +9,6 @@
 
 
 (home-environment
- (home-directory "/home/<USER>")
- ;; (symlink-name ".guix-home-env")
  (packages (list htop))
  (services
   (list

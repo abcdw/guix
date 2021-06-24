@@ -34784,12 +34784,10 @@ manually. (@pxref{Configuring the Shell}).
 @include he-config-bare-bones.texi
 @end lisp
 
-The only required field is @code{home-directory}, which says where the
-profile for this home environment should be placed.  The @code{packages}
-field should be self-explanatory, it will install the list of packages
-into the user's profile.  The most important field is @code{services},
-it contains a list of @dfn{home services}, which are the basic building
-blocks of a home environment.
+The @code{packages} field should be self-explanatory, it will install
+the list of packages into the user's profile.  The most important field
+is @code{services}, it contains a list of @dfn{home services}, which are
+the basic building blocks of a home environment.
 
 There is no daemon (at least not necessary) related to home service,
 it's just an element that is used to declare part of home environment
